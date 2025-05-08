@@ -279,7 +279,7 @@ A continuación se describen los principales casos de uso que la solución Talen
 2.  **UC2: Aplicar a Vacante**
 * **Descripción Breve:** Un Candidato visualiza una oferta de empleo en el portal público básico del ATS MVP y completa el formulario de solicitud, adjuntando su CV y proporcionando datos básicos.
 * **Actores Involucrados:** Candidato (inicia).
-* **Flujo Principal Detallado:** (Sin cambios significativos respecto al PRD original, pero este evento desencadena la lógica actualizada de UC3)
+* **Flujo Principal Detallado:** 
     1.  Candidato accede al portal de empleo del ATS MVP.
     2.  Selecciona una vacante publicada.
     3.  Completa el formulario de aplicación (nombre, email, teléfono opcional, etc.).
@@ -628,7 +628,7 @@ Estos requisitos definen los atributos de calidad, las restricciones operativas 
 * **RNF-02: Latencia de Generación de JD Asistida por IA:** El tiempo total desde que el Reclutador solicita la generación de una JD (UC1) hasta que el contenido generado se muestra en el editor del ATS MVP, incluyendo la llamada al proveedor LLM externo, no debe exceder los 15 segundos para el 90% de las solicitudes.
 * **RNF-03: Latencia de Evaluación de Candidatura por IA:** El procesamiento completo en segundo plano de una nueva candidatura por parte de TalentIA Core AI (UC3) – incluyendo parsing de CV, scoring, comparación con umbral, determinación de etapa sugerida y potencial llamada a LLM para resumen – debe finalizar y el resultado estar disponible para consulta en el ATS MVP en menos de 2 minutos para el 90% de las candidaturas recibidas.
 * **RNF-04: Concurrencia de Usuarios (ATS MVP):** La aplicación ATS MVP debe ser capaz de soportar hasta 20 usuarios (Reclutadores, Hiring Managers) realizando operaciones típicas de forma concurrente (navegación, edición de vacantes, revisión de candidatos, movimiento en pipeline) sin que los tiempos de respuesta (RNF-01) se degraden más allá de un 20% respecto a condiciones de baja carga.
-* **RNF-05: Escalabilidad Horizontal de Core AI:** La arquitectura de microservicios de TalentIA Core AI debe permitir el escalado horizontal independiente de sus componentes (especialmente `Servicio de Evaluación de Candidatos` y `Servicio de Perfil de Candidato`) para manejar picos de carga (ej. recepción simultánea de cientos de candidaturas, consultas concurrentes a `CandidatoIA`) sin impactar el rendimiento de otros servicios o del ATS MVP. La plataforma de orquestación (ej. Kubernetes) debe configurarse para autoescalado basado en métricas como uso de CPU/memoria o longitud de colas (si se usa mensajería).
+* **RNF-05: Escalabilidad del Monolito Core AI en ACA:** La arquitectura monolítica modular de TalentIA Core AI, desplegada en Azure Container Apps, debe permitir el **escalado horizontal** (aumentando o disminuyendo el número de réplicas del contenedor) basado en métricas (CPU, memoria, peticiones HTTP) para manejar la carga esperada en Fase 1. ACA gestionará este escalado.
 * **RNF-06: Capacidad de Volumen de Datos (Fase 1):** El sistema debe gestionar de forma eficiente el volumen de datos estimado para la Fase 1, que incluye [Especificar número, ej., 100] vacantes activas simultáneamente, [Especificar número, ej., 10,000] candidaturas totales y sus correspondientes `EvaluacionCandidatoIA` y `CandidatoIA` asociados, sin degradación del rendimiento en consultas o procesamiento.
 
 ### 9.2. Seguridad
@@ -661,8 +661,8 @@ Estos requisitos definen los atributos de calidad, las restricciones operativas 
 ### 9.5. Mantenibilidad y Extensibilidad
 
 * **RNF-24: Calidad y Documentación del Código:** El código fuente debe adherirse a guías de estilo consensuadas, ser modular, legible y autoexplicativo en la medida de lo posible. Debe incluir comentarios donde la lógica sea compleja y contar con documentación técnica esencial (READMEs por repositorio/servicio, documentación de APIs internas). Implementar cobertura de pruebas unitarias y de integración adecuadas.
-* **RNF-25: Arquitectura Modular y Desacoplada:** La separación entre el monolito ATS MVP y los microservicios Core AI, así como el diseño interno de cada componente, debe facilitar la modificación, prueba y despliegue independiente de partes del sistema con el mínimo impacto en las demás. Las dependencias deben ser explícitas y gestionadas a través de APIs bien definidas.
-* **RNF-26: Automatización de Despliegues (CI/CD):** El proceso para construir, probar y desplegar nuevas versiones de los componentes (ATS MVP y microservicios Core AI) en los diferentes entornos (desarrollo, staging, producción) debe estar automatizado mediante herramientas de Integración Continua y Entrega Continua (CI/CD) para asegurar rapidez, fiabilidad y repetibilidad.
+* **RNF-25: Arquitectura Modular (Lógica):** Aunque Core AI es un monolito, su diseño interno debe ser **modular**, separando claramente las responsabilidades por funcionalidad (Generación JD, Evaluación, etc.) en paquetes o módulos lógicos distintos. Se pierde el desacoplamiento físico y de despliegue independiente de los microservicios.
+* **RNF-26: Automatización de Despliegues (CI/CD):** El proceso para construir, probar y desplegar nuevas versiones de los componentes (ATS MVP monolito y Core AI monolito) en los diferentes entornos debe estar automatizado mediante herramientas CI/CD. El pipeline de Core AI se simplifica al gestionar un único artefacto para **Azure Container Apps**.
 * **RNF-27: Versionado y Contrato de API Interna:** La API RESTful que comunica el ATS MVP con TalentIA Core AI (y potencialmente entre servicios Core AI) debe ser versionada explícitamente (ej. `/api/v1/...`) para permitir la evolución controlada sin romper la compatibilidad con versiones anteriores de los clientes de forma inesperada. El contrato de la API debe estar documentado (ej. OpenAPI/Swagger).
 * **RNF-28: Preparación para Integraciones Futuras:** Aunque la Fase 1 se centra en la integración interna, el diseño de las APIs y del (potencial) Gateway API de Core AI debe considerar la futura necesidad de interactuar con ATS externos (como TeamTailor), facilitando la adaptación o extensión para consumir y exponer datos en formatos compatibles con esas plataformas.
 
@@ -1044,13 +1044,14 @@ Esta sección describe la arquitectura técnica propuesta para la solución Tale
 Se propone un enfoque híbrido:
 
 * **Patrón:**
-  * **ATS MVP:** Una aplicación **Monolítica** (o Monolito Modular) para la interfaz de usuario y la gestión del flujo de trabajo principal del reclutamiento. Esto permite un desarrollo y despliegue más rápido y sencillo para el MVP.
-  * **TalentIA Core AI:** Una arquitectura basada en **Microservicios** para los componentes de inteligencia artificial. Esto permite escalar, desarrollar y desplegar independientemente las capacidades de IA (Generación JD, Evaluación, Aprendizaje), que pueden tener requisitos de recursos y ciclos de vida diferentes.
-* **Justificación:** Este patrón sigue siendo adecuado. Permite:
-    * Desarrollo y despliegue ágil del ATS MVP (Monolito/Modular).
-    * Escalabilidad, desarrollo y despliegue independiente de las capacidades de IA de Core AI (Microservicios).
-    * Encapsulamiento claro de responsabilidades, incluyendo la nueva entidad `CandidatoIA` en un servicio dedicado.
-    * Soporte para los NFRs críticos (seguridad por capas, consistencia vía APIs, cumplimiento GDPR en servicios específicos).
+    * **ATS MVP:** Una aplicación **Monolítica** (o Monolito Modular) para la interfaz de usuario y la gestión del flujo de trabajo principal del reclutamiento.
+    * **TalentIA Core AI:** Una aplicación **Monolítica Modular** para los componentes de inteligencia artificial. Cada capacidad de IA (Generación JD, Evaluación, Aprendizaje, Perfil) se implementará como un módulo lógico dentro de esta única aplicación.
+* **Justificación:** Este patrón modificado busca:
+    * Agilidad y simplicidad en el desarrollo y despliegue de **ambos** componentes para el MVP de Fase 1.
+    * Mantener una separación clara de responsabilidades entre el flujo de trabajo del ATS y la lógica de IA de Core AI a nivel de aplicación.
+    * Simplificar la infraestructura inicial eliminando la necesidad de orquestación de microservicios (Kubernetes).
+    * Aprovechar la modularidad interna para una organización lógica del código dentro de cada monolito.
+    * Aceptar una menor flexibilidad en escalado granular y adopción tecnológica para Core AI en favor de la velocidad de entrega del MVP.
 
 ### 12.2. Arquitectura del ATS MVP
 
@@ -1068,23 +1069,19 @@ Se propone un enfoque híbrido:
 
 ### 12.3. Arquitectura de TalentIA Core AI (Microservicios)
 
-* **Estilo:** Conjunto de servicios independientes, cada uno enfocado en una capacidad específica del dominio de IA para reclutamiento, comunicándose a través de APIs bien definidas.
-* **Tecnología Propuesta:**
-    * *Lenguaje/Framework:* **Java + Spring Boot** ( aprovechar ecosistema Java para IA/ML si aplica y skills del equipo).
-    * *Bases de Datos:* Potencialmente **Políglota** (según necesidades del servicio):
-        * BBDD Relacional (PostgreSQL/MySQL) para metadatos, configuración, feedback estructurado.
-        * BBDD NoSQL/Documental (MongoDB, Elasticsearch) para almacenar datos parseados de CVs (`datos_extraidos_cv`) o logs extensos, dada su naturaleza semi-estructurada o variable.
-    * *Comunicación Inter-Servicios:* APIs RESTful internas.
-    * *Comunicación Asíncrona (Opcional - Should/Could Have):* Uso de un **Message Broker** (RabbitMQ, Kafka) para tareas de larga duración (ej. evaluación masiva de CVs) o desacoplamiento de eventos (ej. notificación de feedback recibido).
-* **Microservicios Propuestos (Fase 1):**
+* **Estilo:** Aplicación única desplegable estructurada internamente en módulos lógicos cohesivos.
+ * **Tecnología Propuesta:**
+    * *Lenguaje/Framework:* **Java + Spring Boot** (unificado para todo Core AI).
+    * *Base de Datos:* **PostgreSQL** (recomendado para simplificar, usando JSONB si es necesario).
+    * *Comunicación Inter-Módulos:* Llamadas a métodos de servicio internos.
+    * *API Externa:* Expuesta a través de una capa API (ej. Spring MVC/WebFlux) dentro del monolito.
+* **Módulos Lógicos Internos Propuestos (Fase 1):**
     * **`Servicio de Generación JD`:** Responsable de UC1 (parte IA). Expone API para recibir petición, invoca `Proveedor IA / LLM`, devuelve JD. Potencialmente accede a BBDD para plantillas o datos internos (RF-23). Almacena `DescripcionPuestoGenerada`.
     * **`Servicio de Evaluación de Candidatos`:** Responsable de UC3 (parte IA). Expone API para recibir datos de candidatura/CV. Orquesta el parsing, matching, scoring e invocación opcional al `Proveedor IA / LLM` para resúmenes. Almacena `EvaluacionCandidatoIA` (incluyendo `datos_extraidos_cv`).
-   * **`Servicio Perfil Candidato`:** Responsable de gestionar el agregado `CandidatoIA` (creación, actualización de `candidaturas_ids`, consulta de perfil unificado). Interactúa con su persistencia (probablemente BBDD relacional Core AI).
+    * **`Servicio Perfil Candidato`:** Responsable de gestionar el agregado `CandidatoIA` (creación, actualización de `candidaturas_ids`, consulta de perfil unificado). Interactúa con su persistencia (probablemente BBDD relacional Core AI).
     * **`Servicio de Feedback y Aprendizaje`:** Responsable de UC5 (parte IA). Expone API para recibir feedback desde ATS MVP. Almacena `RegistroFeedbackIA`. Contiene la lógica (potencialmente offline/batch) para re-entrenar/ajustar modelos.
-    * **`Servicio de Integración Interna/Gateway API (Opcional)`:**
-        * *Opción A (Simple):* El ATS MVP llama directamente a las APIs de los otros servicios Core AI.
-        * *Opción B (Recomendada):* Un Gateway API interno que expone una fachada unificada para el ATS MVP, enrutando las peticiones a los servicios correspondientes. Podría manejar autenticación/autorización interna. *Este mismo Gateway podría evolucionar para exponer la API "tipo TeamTailor" en el futuro.*
-* **Despliegue:** Contenedores **Docker** individuales para cada microservicio, orquestados mediante **Kubernetes** (o alternativa como AWS ECS, Google Cloud Run) para gestionar escalado, resiliencia y despliegues.
+    * **`Capa API Externa`** (Gestiona peticiones entrantes)
+* **Despliegue:** Contenedor **Docker** único desplegado en **Azure Container Apps (ACA)**.
 
 ### 12.4. Interacción y Flujo de Datos
 
@@ -1132,70 +1129,38 @@ Se propone un enfoque híbrido:
             MVP_DB[("📄<br>BBDD ATS MVP<br>[Ej: PostgreSQL]")]
         end
 
-        subgraph Core_AI_Group ["TalentIA Core AI"]
-            direction TB
-            Gateway["Gateway API Core AI<br>(Opcional)<br>[Ej: Spring Cloud Gateway]"]
-            subgraph Servicios_Core_AI ["Microservicios<br>[Ej: Java/Spring Boot]"]
-                direction LR
-                JDService["Servicio<br>Generación JD"]
-                EvalService["Servicio<br>Evaluación Candidatos"]
-                PerfilService["Servicio<br>Perfil Candidato"]
-                FeedbackService["Servicio<br>Feedback/Aprendizaje"]
-            end
-            subgraph BBDD_Core_AI ["Bases de Datos Core AI"]
-                direction LR
-                Core_DB_Rel[("📄<br>BBDD Core AI<br>(Relacional)<br>[Ej: PostgreSQL]")]
-                Core_DB_NoSQL[("📄<br>BBDD Core AI<br>(NoSQL - Opcional)<br>[Ej: MongoDB]")]
-            end
-            Gateway --> Servicios_Core_AI
-            Servicios_Core_AI --> BBDD_Core_AI
+        subgraph Core_AI_Group ["TalentIA Core AI en ACA"]
+            CoreAI_App["Core AI Monolith<br>(Aplicación Modular)<br>[Ej: Java/Spring Boot]<br>Desplegado en Azure Container Apps"]
+            CoreAI_DB[("📄<br>BBDD Core AI<br>(Unificada)<br>[Ej: PostgreSQL]")]
         end
     end
 
     %% Relaciones Principales
     User -- "Usa (HTTPS)" --> MVP
-    MVP -- "Llama API Core AI (vía Gateway)<br>HTTPS/REST" --> Gateway
-    Gateway -- "Enruta a" --> JDService
-    Gateway -- "Enruta a" --> EvalService
-    Gateway -- "Enruta a" --> PerfilService
-    Gateway -- "Enruta a" --> FeedbackService
-
-    %% Interacción Interna Core AI
-    EvalService -- "Consulta/Vincula<br>CandidatoIA" --> PerfilService
+    MVP -- "Llama API Core AI<br>HTTPS/REST" --> CoreAI_App
 
     %% Relaciones con BBDD
-    MVP -- "Lee/Escribe<br>(JDBC/SQL)" --> MVP_DB
-    JDService -- "Lee/Escribe" --> Core_DB_Rel
-    EvalService -- "Lee/Escribe Metadatos" --> Core_DB_Rel
-    EvalService -- "Lee/Escribe Datos CV" --> Core_DB_NoSQL
-    PerfilService -- "Lee/Escribe CandidatoIA" --> Core_DB_Rel
-    FeedbackService -- "Lee/Escribe Feedback" --> Core_DB_Rel
+    MVP -- "Lee/Escribe<br>(ORM/SQL)" --> MVP_DB
+    CoreAI_App -- "Lee/Escribe<br>(ORM/SQL)" --> CoreAI_DB
 
     %% Relaciones con Externos
-    JDService -- "Invoca API<br>(HTTPS)" --> ExtLLM
-    EvalService -- "Invoca API<br>(HTTPS)" --> ExtLLM
+    CoreAI_App -- "Invoca API LLM<br>(HTTPS)" --> ExtLLM
 
     %% Estilos
     style User fill:#lightblue,stroke:#333
     style MVP fill:#lightblue,stroke:#333
     style MVP_DB fill:#lightgrey,stroke:#333
-    style Gateway fill:#lightgreen,stroke:#333
-    style JDService fill:#lightgreen,stroke:#333
-    style EvalService fill:#lightgreen,stroke:#333
-    style PerfilService fill:#lightgreen,stroke:#333
-    style FeedbackService fill:#lightgreen,stroke:#333
-    style Core_DB_Rel fill:#lightgrey,stroke:#333
-    style Core_DB_NoSQL fill:#lightgrey,stroke:#333
-    style ExtLLM fill:#lightgrey,stroke:#333 
+    style CoreAI_App fill:#lightgreen,stroke:#333
+    style CoreAI_DB fill:#lightgrey,stroke:#333
+    style ExtLLM fill:#lightgrey,stroke:#333
     ```
 * **(Opcional) Diagramas de Componentes (C3) y Código (C4):** Se pueden desarrollar ejemplos específicos para cada microservicio durante la fase de diseño detallado.
 
 ### 12.6. Alineación con Requisitos No Funcionales
-* **Rendimiento/Escalabilidad:** Soportado por microservicios Core AI escalables horizontalmente e independientes del monolito MVP. Tiempos de respuesta dependen de la optimización de cada componente y llamadas externas.
-* **Seguridad:** Debe implementarse en cada capa: HTTPS, autenticación MVP, autorización básica, seguridad APIs internas/externas, cifrado BBDD, gestión secretos.
+* **Rendimiento/Escalabilidad:** Escalado del monolito Core AI gestionado por ACA (RNF-05).
+* **Seguridad:** Implementada en cada aplicación (ATS y Core AI).
+* **Mantenibilidad/Extensibilidad:** Modularidad lógica interna. El pipeline CI/CD para Core AI se simplifica (RNF-26). Se pierde despliegue independiente.
 * **Usabilidad:** Depende del diseño del frontend del ATS MVP.
-* **Fiabilidad/Disponibilidad:** Orquestación (Kubernetes) para microservicios Core AI ayuda a la resiliencia. Backups y monitoreo necesarios para ambas partes.
-* **Mantenibilidad/Extensibilidad:** Favorecida por la separación en microservicios Core AI y APIs claras. El diseño del Gateway y APIs internas debe facilitar añadir futuras integraciones (RNF-28).
 * **Cumplimiento:** Responsabilidad compartida: ATS MVP (consentimiento, interfaz derechos), Core AI (procesamiento seguro), BBDD (cifrado, retención).
 
 ## 13. Métricas de Éxito y Retroalimentación Continua (Fase 1)

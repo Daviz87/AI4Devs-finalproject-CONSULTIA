@@ -17,7 +17,7 @@ El ATS MVP se enfoca en proporcionar las funcionalidades esenciales para la gest
 
 ## 3. Patrón Arquitectónico General
 
-Para el ATS MVP, se ha adoptado un patrón arquitectónico de **Monolito** o **Monolito Modular**. Este enfoque se justifica por la necesidad de agilizar el desarrollo y despliegue de la funcionalidad mínima viable en esta fase inicial. La separación de responsabilidades se gestiona a nivel de módulos lógicos internos. La Plataforma TalentIA Core AI, por otro lado, se implementa como una arquitectura de microservicios, lo que resulta en un enfoque arquitectónico **híbrido** para la solución completa de TalentIA Fase 1.
+Para el ATS MVP, se ha adoptado un patrón arquitectónico de **Monolito** o **Monolito Modular**. Este enfoque se justifica por la necesidad de agilizar el desarrollo y despliegue de la funcionalidad mínima viable en esta fase inicial. La separación de responsabilidades se gestiona a nivel de módulos lógicos internos. La Plataforma TalentIA Core AI, por otro lado, se implementa como una **aplicación monolítica modular**, lo que resulta en un enfoque arquitectónico **híbrido** para la solución completa de TalentIA Fase 1 (Monolito ATS + Monolito Core AI).
 
 ## 4. Vista Lógica/Conceptual del ATS MVP
 
@@ -55,8 +55,8 @@ El ATS MVP se estructura lógicamente en varios módulos o componentes principal
 
 ### 4.7. Módulo de Integración/Comunicación con Core AI
 
-* **Responsabilidad:** Servir como la capa de comunicación y adaptación entre el ATS MVP y los microservicios de TalentIA Core AI. Encapsula la lógica para realizar las llamadas a la [API interna de Core AI]((../rfs/rf-21-api-interna-ats-mvp-core-ai.md)), manejar la autenticación interna entre ambos sistemas y procesar las respuestas recibidas. Los otros módulos del ATS MVP interactúan con Core AI a través de este módulo.
-* **Relación con la Documentación:** Se relaciona transversalmente con todas las [Features](../features/features-overview.md) y [User Stories](../us/us-overview.md) que implican interacción entre ATS MVP y Core AI [[RF-21]](../rfs/rf-21-api-interna-ats-mvp-core-ai.md), [[US-01]](../us/us-01-definir-contrato-api-interna.md), [TK-001](../tasks/tk-001-arq-definir-documentar-contrato-api-v1.md). Es invocado por los Módulos de Gestión de Vacantes, Gestión de Candidaturas y Gestión del Pipeline para las operaciones que requieren inteligencia artificial o datos del perfil unificado de Core AI.
+* **Responsabilidad:** Servir como la capa de comunicación y adaptación entre el ATS MVP y la **aplicación monolítica TalentIA Core AI**. Encapsula la lógica para realizar las llamadas a la **API externa** [API interna de Core AI]((../rfs/rf-21-api-interna-ats-mvp-core-ai.md)), manejar la autenticación interna entre ambos sistemas y procesar las respuestas recibidas. Los otros módulos del ATS MVP interactúan con Core AI a través de este módulo.
+* **Relación con la Documentación:** Se relaciona transversalmente con todas las [Features](../features/features-overview.md) y [User Stories](../us/us-overview.md) que implican interacción entre ATS MVP y Core AI [[RF-21]](../rfs/rf-21-api-interna-ats-mvp-core-ai.md), [[US-01]](../us/us-01-definir-contrato-api-interna.md), [TK-001](../tasks/tk-001-arq-definir-documentar-contrato-api-v1.md). [...]
 
 ## 5. Vista Detallada de Módulos y Componentes Internos
 
@@ -143,8 +143,8 @@ Los flujos de procesos detallados para los casos de uso principales que involucr
 
 Los patrones de interacción principales entre el ATS MVP y Core AI son:
 
-* **ATS MVP como cliente de servicios de Core AI:** El ATS MVP inicia la comunicación para solicitar la generación de contenido (JDs) o invocar procesos de evaluación, enviando los datos necesarios a los endpoints de la [API interna de Core AI]((../rfs/rf-21-api-interna-ats-mvp-core-ai.md)).
-* **Core AI procesando y devolviendo resultados:** Core AI recibe las solicitudes, ejecuta su lógica (interactuando con proveedores LLM si es necesario, como se describe en [RF-22](../rfs/rf-22-invocacion-proveedor-llm-core-ai.md)), persiste sus propios datos (como `CandidatoIA` y `EvaluacionCandidatoIA`, detallado en [db-overview.md](../db/db-overview.md#2-base-de-datos-talentia-core-ai)), y devuelve los resultados (JD generada, score, sugerencia de etapa, resumen, etc., según [RF-13](../rfs/rf-13-devolver-evaluacion-core-ai.md)) al ATS MVP a través de la API interna.
+* **ATS MVP como cliente de servicios de Core AI:** El ATS MVP inicia la comunicación para solicitar la generación de contenido (JDs) o invocar procesos de evaluación, enviando los datos necesarios a los endpoints de la **API externa de Core AI** ([RF-21](../rfs/rf-21-api-interna-ats-mvp-core-ai.md)).
+* **Core AI procesando y devolviendo resultados:** Core AI recibe las solicitudes, ejecuta su lógica **interna entre módulos** (interactuando con proveedores LLM si es necesario, como se describe en [RF-22](../rfs/rf-22-invocacion-proveedor-llm-core-ai.md)), persiste sus propios datos en su **BBDD unificada** (como `CandidatoIA` y `EvaluacionCandidatoIA`, detallado en [db-overview.md](../db/db-overview.md#2-base-de-datos-talentia-core-ai)), y devuelve los resultados (JD generada, score, sugerencia de etapa, resumen, etc., según [RF-13](../rfs/rf-13-devolver-evaluacion-core-ai.md)) al ATS MVP a través de la **API externa**i.
 * **ATS MVP actualizando UI y datos locales:** El ATS MVP recibe los resultados de Core AI y los utiliza para actualizar su interfaz de usuario y/o almacenar información clave (como el score y la etapa sugerida) en su propia base de datos para visualización y gestión del flujo. Los detalles de la base de datos del ATS MVP se encuentran en [db-overview.md](../db/db-overview.md#1-base-de-datos-ats-mvp).
 * **ATS MVP enviando feedback a Core AI:** El ATS MVP captura el feedback del usuario sobre las evaluaciones IA ([RF-18](../rfs/rf-18-capturar-feedback-basico-ats-mvp.md), [RF-27](../rfs/rf-27-feedback-ia-detallado-ats-mvp.md)) y lo envía a Core AI para el aprendizaje continuo ([RF-19](../rfs/rf-19-enviar-feedback-ats-mvp.md), [RF-20](../rfs/rf-20-recibir-almacenar-feedback-core-ai.md)).
 
