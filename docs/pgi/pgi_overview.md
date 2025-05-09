@@ -11,10 +11,10 @@ Este documento describe el plan general de implementación para las features de 
 ### 1. Feature 7: Administración y Configuración del Sistema (Prioridad: Muy Alta)
 
 * **Enfoque:** Establecer la base técnica esencial del sistema.
-* **Descripción:** Agrupa las funcionalidades necesarias para la configuración inicial y el mantenimiento básico del ATS MVP, incluyendo la gestión de usuarios y sus roles, la autenticación para el acceso seguro, la configuración de elementos clave del flujo de trabajo como las etapas del pipeline y la definición de la API interna que conecta ATS y Core AI.
+* **Descripción:** Agrupa las funcionalidades necesarias para la configuración inicial y el mantenimiento básico del ATS MVP, incluyendo la gestión de usuarios y sus roles, la autenticación para el acceso seguro, la configuración de elementos clave del flujo de trabajo como las etapas del pipeline y la definición de la API interna que conecta ATS y **el monolito Core AI**.
 * **Tareas Técnicas Asociadas (TKs):**
     * **US-01: Definir Contrato API Interna:**
-        * [TK-001: ARQ: Definir y Documentar Contrato API v1 (OpenAPI)](./tasks/tk-001-arq-definir-documentar-contrato-api-v1.md)
+        * [TK-001: ARQ: Definir y Documentar Contrato API v1 (OpenAPI) **externa** entre ATS MVP y Core AI](./tasks/tk-001-arq-definir-documentar-contrato-api-v1.md) 
     * **US-02: Gestionar Etapas del Pipeline:**
         * [TK-011: BE: Definir/Actualizar Esquema BBDD para Entidad `EtapaPipeline`](./tasks/tk-011-esquema-bbdd-etapa-pipeline.md)
         * [TK-012: BE: Implementar Endpoints API RESTful para CRUD de Etapas de Pipeline](./tasks/tk-012-be-implementar-endpoints-crud-etapa-pipeline.md)
@@ -146,7 +146,7 @@ Este documento describe el plan general de implementación para las features de 
         * [TK-042: BE: Implementar Endpoint Recepción Candidatura](./tasks/tk-042-BE-Implementar-API-Recepcion-Candidatura.md)
         * [TK-043: BE: Implementar Almacenamiento Seguro de Archivos CV](./tasks/tk-043-BE-Implementar-Almacenamiento-CV.md)
         * [TK-044: BE: Implementar Lógica de Negocio para Procesar Nueva Aplicación](./tasks/tk-044-BE-Implementar-Logica-Procesar-Aplicacion.md)
-        * [TK-045: BE: Desencadenar Procesamiento IA Post-Aplicación](./tasks/tk-045-BE-Desencadenar-Procesamiento-IA-Post-Aplicacion.md)
+        * [TK-045: BE: Desencadenar Procesamiento IA Post-Aplicación **(Llamada API Externa Core AI)**](./tasks/tk-045-BE-Desencadenar-Procesamiento-IA-Post-Aplicacion.md)
 * **Diagrama:**
     ```plantuml
     @startuml
@@ -194,12 +194,12 @@ Este documento describe el plan general de implementación para las features de 
         * [TK-053: FE: Implementar Componente Editor RTE JD](./tasks/tk-053-FE-Implementar-Componente-Editor-RTE-JD.md)
         * [TK-054: FE: Asegurar Guardado de Contenido Editado del Editor de JD](./tasks/tk-054-FE-Asegurar-Guardado-Contenido-Editor-JD.md)
     * **US-15: Generar Borrador de JD Usando IA (Core AI):**
-        * [TK-055: CAI-BE: Implementar API Solicitud Generación JD](./tasks/tk-055-CAI-BE-Implementar-API-Solicitud-Generacion-JD.md)
+        * [TK-055: CAI-BE: Implementar API **Externa** Solicitud Generación JD](./tasks/tk-055-CAI-BE-Implementar-API-Solicitud-Generacion-JD.md)
         * [TK-056: CAI-BE: Implementar Logica Prompt Engineering JD](./tasks/tk-056-CAI-BE-Implementar-Logica-Prompt-Engineering-JD.md)
         * [TK-057: CAI-BE: Implementar Integración LLM Externo](./tasks/tk-057-CAI-BE-Implementar-Integracion-LLM-Externo.md)
         * [TK-058: CAI-BE: Implementar Manejo Respuesta LLM](./tasks/tk-058-CAI-BE-Implementar-Manejo-Respuesta-LLM.md)
     * **US-16: Almacenar Parámetros de Evaluación IA (Core AI):**
-        * [TK-059: CAI-BE: Implementar Endpoint API Core AI para Guardar Parámetros IA](./tasks/tk-059-CAI-BE-Implementar-API-Guardar-Params-IA.md)
+        * [TK-059: CAI-BE: Implementar Endpoint API **Externa** Core AI para Guardar Parámetros IA](./tasks/tk-059-CAI-BE-Implementar-API-Guardar-Params-IA.md)
         * [TK-060: CAI-BE: Implementar Lógica de Negocio para Guardar Parámetros IA](./tasks/tk-060-CAI-BE-Implementar-Logica-Guardar-Params-IA.md)
     * **US-17: Enriquecer Generación de JD con Datos Internos (Core AI - Should Have):**
         * [TK-061: CAI-BE: Investigar Implementar Enriquecimiento de JD con Datos Internos](./tasks/tk-061-CAI-BE-Investigar-Implementar-Enriquecimiento-JD-Datos-Internos.md)

@@ -15,7 +15,7 @@ US-013: Configurar Parámetros de Evaluación IA para la Vacante
     * Dropdown/Selector para "Etapa Sugerida (Aceptación)".
     * Dropdown/Selector para "Etapa Sugerida (Rechazo)".
 2.  Los selectores de etapa se pueblan con las etapas marcadas como "seleccionable_ia" (obtenidas de la lógica de US-002/TK-015).
-3.  Los campos muestran los valores actuales si ya fueron configurados previamente para esa vacante (requiere lógica de carga en TK-025 adaptada).
+3.  Los campos muestran los valores actuales si ya fueron configurados previamente para esa vacante (requiere lógica de carga en TK-025).
 4.  Los campos están agrupados de forma lógica (ej. en una sección "Configuración IA").
 
 ## Solución Técnica Propuesta (Opcional)

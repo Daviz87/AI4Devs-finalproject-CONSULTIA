@@ -1,45 +1,43 @@
-# Ticket: TK-078
+# Ticket: TK-079
 
 ## Título
-CAI-BE: Implementar Orquestación de Llamada a LLM para Generación de Resumen
+CAI-BE: Implementar Almacenamiento Resumen Generado **en BBDD Unificada**
 
 ## Descripción
-Desarrollar la lógica dentro del servicio de Evaluación de Core AI que orquesta la generación del resumen. Debe: 1) Invocar la lógica de prompt engineering (TK-077). 2) Realizar la llamada al LLM externo usando la integración existente (TK-057) con el prompt específico para resumen. 3) Recibir la respuesta del LLM y extraer el texto del resumen. 4) Manejar errores específicos de este proceso.
+Desarrollar la lógica dentro del **módulo de Evaluación del monolito Core AI** para tomar el texto del resumen generado (por TK-078) y almacenarlo de forma persistente en la entidad `EvaluacionCandidatoIA` asociada, **en la BBDD unificada**.
 
 ## User Story Relacionada
 US-025: Generar Resumen Ejecutivo del Candidato vs Vacante (Capacidad Core AI)
 
 ## Criterios de Aceptación Técnicos (Verificables)
-1.  Existe una función/método `generateCandidateSummary(candidateData, vacancyRequirements)` que orquesta el proceso.
-2.  Invoca a TK-077 para obtener el prompt de resumen.
-3.  Invoca a TK-057 para realizar la llamada al LLM con ese prompt.
-4.  Recibe la respuesta del LLM. Si hay error en la llamada, lo maneja y devuelve indicación de fallo.
-5.  Si la llamada es exitosa, parsea la respuesta del LLM para extraer el texto del resumen generado.
-6.  Devuelve el texto del resumen extraído (o null/error si falla la extracción).
+1.  Existe una función/método `saveSummary(evaluacionId, summaryText)` que recibe el ID de la evaluación y el texto del resumen.
+2.  Busca la entidad `EvaluacionCandidatoIA` correspondiente a `evaluacionId` **en la BBDD unificada**.
+3.  Actualiza el campo `resumen_generado` (Text) en `EvaluacionCandidatoIA`.
+4.  Guarda (UPDATE) la entidad en la **BBDD unificada**.
+5.  Maneja errores de base de datos.
 
 ## Solución Técnica Propuesta (Opcional)
-Implementar como un método dentro del servicio de Evaluación, invocado opcionalmente durante el flujo principal de evaluación (TK-066). Reutilizar el cliente LLM de TK-057.
+Usar el ORM para actualizar el campo de texto en `EvaluacionCandidatoIA`.
 
 ## Dependencias Técnicas (Directas)
-* TK-077 (Generación del prompt).
-* TK-057 (Integración/llamada LLM).
-* TK-079 (Almacena el resumen generado).
-* TK-066 (Orquestador que podría invocar esta lógica).
+* TK-078 (Provee el texto del resumen).
+* Lógica de creación/obtención de `EvaluacionCandidatoIA`.
+* Esquema BBDD Core AI **unificado** con entidad `EvaluacionCandidatoIA` y campo `resumen_generado`.
 
 ## Prioridad (Heredada/Ajustada)
 Should Have (Heredada de US-025)
 
 ## Estimación Técnica Preliminar
-[ 3 ] [horas] - [Orquestación llamada, manejo respuesta/error específico de resumen]
+[ 2 ] [horas] - [Implementación lógica de actualización BBDD unificada para campo resumen]
 
 ## Asignación Inicial
-Equipo Backend (Core AI) / AI Engineer
+Equipo Backend (Core AI)
 
 ## Etiquetas
-backend, core-ai, ai, llm, summary, evaluation, orchestrator
+backend, core-ai, database, save, evaluation, summary, **monolith**, **unified-db**
 
 ## Comentarios
-Coordina la generación específica del resumen.
+Requiere definición del esquema unificado de `EvaluacionCandidatoIA`.
 
 ## Enlaces o Referencias
-[Documentación API LLM sobre formato respuesta]
+[Modelo de Datos Fase 5], [Documentación ORM]

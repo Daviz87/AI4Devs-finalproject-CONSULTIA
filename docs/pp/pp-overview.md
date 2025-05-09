@@ -9,44 +9,44 @@ Este documento describe la estrategia general de pruebas para la Fase 1 del proy
 ### 2.1. En Alcance (Fase 1)
 
 * **ATS MVP:**
-    * Funcionalidades CRUD de Vacantes (Crear, Editar, Cambiar Estado).
-    * Configuración del sistema (Gestión de Usuarios, Etapas de Pipeline).
-    * Autenticación y Autorización básica por roles.
-    * Portal Público de Empleo (Listado de Vacantes).
-    * Proceso de Aplicación de Candidatos (Formulario, Subida CV).
-    * Recepción y almacenamiento de Candidaturas.
-    * Visualización de Candidatos (Lista, Detalle, Kanban).
-    * Visualización de resultados de IA (Score, Etapa Sugerida, Resumen).
-    * Gestión del Pipeline (Movimiento manual de candidatos).
-    * Captura de Feedback IA (Básico y Detallado).
-    * Funcionalidades "Could Have" (Notificaciones, Búsqueda, Dashboard, Exportación) si se implementan.
-* **TalentIA Core AI (Funcionalidad y Calidad):**
-    * Generación de JD (Calidad y relevancia del contenido).
-    * Almacenamiento de parámetros IA por vacante.
-    * Gestión del Perfil Unificado `CandidatoIA`.
-    * Parsing de CV (Precisión en extracción de skills, experiencia, educación).
-    * Cálculo de Score (Consistencia, correlación inicial con evaluación manual).
-    * Determinación de Etapa Sugerida (Corrección basada en score y configuración).
-    * Generación de Resumen (Calidad y relevancia - Should Have).
-    * Recepción y Almacenamiento de Feedback.
+   * Funcionalidades CRUD de Vacantes (Crear, Editar, Cambiar Estado).
+   * Configuración del sistema (Gestión de Usuarios, Etapas de Pipeline).
+   * Autenticación y Autorización básica por roles.
+   * Portal Público de Empleo (Listado de Vacantes).
+   * Proceso de Aplicación de Candidatos (Formulario, Subida CV).
+   * Recepción y almacenamiento de Candidaturas.
+   * Visualización de Candidatos (Lista, Detalle, Kanban).
+   * Visualización de resultados de IA (Score, Etapa Sugerida, Resumen).
+   * Gestión del Pipeline (Movimiento manual de candidatos).
+   * Captura de Feedback IA (Básico y Detallado).
+   * Funcionalidades "Could Have" (Notificaciones, Búsqueda, Dashboard, Exportación) si se implementan.
+* **TalentIA Core AI (Monolito Modular - Funcionalidad y Calidad):**
+   * Generación de JD (Calidad y relevancia del contenido).
+   * Almacenamiento de parámetros IA por vacante.
+   * Gestión del Perfil Unificado `CandidatoIA`.
+   * Parsing de CV (Precisión en extracción de skills, experiencia, educación).
+   * Cálculo de Score (Consistencia, correlación inicial con evaluación manual).
+   * Determinación de Etapa Sugerida (Corrección basada en score y configuración).
+   * Generación de Resumen (Calidad y relevancia - Should Have).
+   * Recepción y Almacenamiento de Feedback.
 * **Integración:**
-    * Comunicación API ATS MVP <-> Core AI (Según contrato TK-001).
-    * Comunicación Core AI <-> Proveedor LLM Externo.
+   * Comunicación API ATS MVP <-> Core AI (Monolito) (Según contrato TK-001).
+   * Comunicación Core AI (Monolito) <-> Proveedor LLM Externo.
 * **Requisitos No Funcionales (NFRs):**
-    * Pruebas básicas de Rendimiento (según RNF-01 a RNF-06).
-    * Pruebas básicas de Seguridad (según RNF-07 a RNF-14).
-    * Evaluación de Usabilidad básica (según RNF-15 a RNF-19).
-    * Fiabilidad (manejo de errores, backups básicos - RNF-20 a RNF-23B).
+   * Pruebas básicas de Rendimiento (según RNF-01 a RNF-06, **enfocadas en los monolitos y ACA**).
+   * Pruebas básicas de Seguridad (según RNF-07 a RNF-14).
+   * Evaluación de Usabilidad básica (según RNF-15 a RNF-19).
+   * Fiabilidad (manejo de errores, backups básicos - RNF-20 a RNF-23B).
 
 ### 2.2. Fuera de Alcance (Fase 1)
 
 * Integración con ATS externos (TeamTailor, etc.).
-* Funcionalidades avanzadas de ATS no incluidas en el MVP (ej. onboarding, gestión avanzada de ofertas).
+* Funcionalidades avanzadas de ATS no incluidas en el MVP.
 * Analíticas avanzadas y reporting complejo.
-* Soporte multi-idioma avanzado (más allá del idioma principal definido).
-* Pruebas de carga extensivas o pruebas de estrés más allá de validar RNF básicos.
-* Pruebas exhaustivas de penetración de seguridad (se realizarán verificaciones básicas).
-* Funcionalidades de extensión futura (Anexo II del PRD).
+* Soporte multi-idioma avanzado.
+* Pruebas de carga extensivas más allá de validar NFR básicos.
+* Pruebas exhaustivas de penetración (verificaciones básicas).
+* Funcionalidades de extensión futura (Anexo II).
 
 ## 3. Niveles de Prueba
 
@@ -54,11 +54,12 @@ Se aplicarán los siguientes niveles de prueba:
 
 * **Pruebas Unitarias:** Realizadas por los desarrolladores para verificar componentes individuales (funciones, métodos, clases) en aislamiento, tanto en el Backend (ATS y Core AI) como en el Frontend. Cobertura mínima objetivo: 70-80%.
 * **Pruebas de Integración:**
-    * Verificar la correcta comunicación y flujo de datos entre ATS MVP y los servicios de Core AI a través de la API interna (TK-001).
-    * Verificar la interacción de Core AI con el Proveedor LLM externo.
-    * Verificar la interacción de los servicios backend con las bases de datos.
-* **Pruebas de Sistema / E2E (End-to-End):** Simular flujos de usuario completos basados en las User Stories para verificar la funcionalidad del sistema integrado como un todo (ej. desde creación de vacante hasta movimiento de candidato evaluado en pipeline).
-* **Pruebas de API:** Probar directamente los endpoints API (ATS y Core AI) definidos en TK-001 usando herramientas como Postman/Insomnia o frameworks de automatización, verificando contratos, respuestas y códigos de estado.
+   * Verificar la correcta comunicación y flujo de datos entre ATS MVP y el monolito Core AI a través de la API interna (TK-001).
+   * **Verificar la interacción entre los módulos internos del monolito Core AI.**
+   * Verificar la interacción de Core AI con el Proveedor LLM externo.
+   * Verificar la interacción de los servicios backend (ATS y Core AI) con sus respectivas bases de datos.
+* **Pruebas de Sistema / E2E (End-to-End):** Simular flujos de usuario completos basados en las User Stories para verificar la funcionalidad del sistema integrado como un todo.
+* **Pruebas de API:** Probar directamente los endpoints API expuestos por ATS MVP y Core AI usando herramientas como Postman/Insomnia o frameworks de automatización.
 
 ## 4. Tipos de Prueba
 
@@ -67,8 +68,8 @@ Se aplicarán los siguientes niveles de prueba:
     * **Basadas en Tareas Técnicas:** Usar los criterios de aceptación técnicos de los TKs para pruebas más granulares.
     * **Priorización:** Enfocarse primero en las features "Must Have", luego "Should Have", y finalmente "Could Have".
 * **Pruebas No Funcionales:**
-    * **Rendimiento:** Pruebas básicas de tiempos de respuesta para operaciones clave (RNF-01 a RNF-03) bajo carga simulada moderada (RNF-04).
-    * **Seguridad:** Verificaciones de autenticación, autorización por roles, protección básica contra OWASP Top 10 (ej. SQL Injection, XSS), seguridad de API Keys (RNF-07 a RNF-14).
+   * **Rendimiento:** Pruebas básicas de tiempos de respuesta (RNF-01 a RNF-03) bajo carga simulada moderada (RNF-04), validando el rendimiento del **monolito Core AI en Azure Container Apps**.
+* **Seguridad:** Verificaciones de autenticación, autorización por roles, protección básica contra OWASP Top 10 (ej. SQL Injection, XSS), seguridad de API Keys (RNF-07 a RNF-14).
     * **Usabilidad:** Evaluación heurística de la interfaz del ATS y Portal, y feedback durante UAT (RNF-15 a RNF-19).
     * **Fiabilidad:** Pruebas de manejo de errores y validación del plan básico de backup/restore (RNF-20 a RNF-23B).
 * **Pruebas de Regresión:** Ejecutar un conjunto definido de casos de prueba (manuales y/o automatizados) antes de cada release o cambio significativo para asegurar que no se han introducido nuevos defectos.
@@ -76,11 +77,11 @@ Se aplicarán los siguientes niveles de prueba:
 
 ## 5. Estrategia de Automatización
 
-* **Pruebas Unitarias:** Deben ser automatizadas por los desarrolladores como parte del proceso de desarrollo.
-* **Pruebas de API:** Alta prioridad para automatización. Permiten validar la lógica de backend e integración Core AI de forma rápida y fiable.
-* **Pruebas de Integración (API Layer):** Automatizar pruebas que verifiquen la comunicación ATS <-> Core AI.
-* **Pruebas E2E:** Automatizar los flujos críticos principales (ej. login, crear vacante, aplicar, ver candidato evaluado, mover en pipeline) usando herramientas como Cypress, Selenium, Playwright.
-* **Pruebas de Regresión:** El conjunto de pruebas automatizadas (Unit, API, E2E) formará la base de la suite de regresión.
+* **Pruebas Unitarias:** Automatizadas.
+* **Pruebas de API:** Alta prioridad para automatización (ATS y Core AI).
+* **Pruebas de Integración (API Layer):** Automatizar pruebas que verifiquen la comunicación ATS <-> Core AI (API externa de Core AI). **Las pruebas de integración internas de Core AI ahora prueban llamadas a métodos/servicios, no APIs.**
+* **Pruebas E2E:** Automatizar flujos críticos principales.
+* **Pruebas de Regresión:** Suite automatizada.
 * **Pruebas Manuales:** Necesarias para pruebas exploratorias, de usabilidad, validación inicial de nuevas features, y escenarios complejos difíciles de automatizar.
 
 ## 6. Enfoque Específico para Pruebas de IA (Core AI)
@@ -99,7 +100,7 @@ Dado que la validación de la IA es un objetivo clave, se requiere un enfoque es
 
 ## 7. Entornos, Datos y Herramientas
 
-* **Entornos:** Se necesitarán entornos separados para Desarrollo, QA/Staging (integración y pruebas) y Producción (para el Piloto inicial).
+* **Entornos:** Se necesitarán entornos separados para Desarrollo, QA/Staging y Producción. Core AI se desplegará en **Azure Container Apps** en estos entornos.
 * **Datos de Prueba:** Se creará un conjunto de datos de prueba que incluya:
     * Usuarios con diferentes roles.
     * Vacantes con diferentes estados y configuraciones IA.
@@ -110,7 +111,7 @@ Dado que la validación de la IA es un objetivo clave, se requiere un enfoque es
     * **Pruebas de API:** Postman, Insomnia, o frameworks de automatización (RestAssured, Karate).
     * **Automatización UI:** Cypress, Selenium, Playwright.
     * **Pruebas de Carga:** k6, JMeter (para pruebas básicas de NFRs).
-    * **CI/CD:** Jenkins, GitLab CI, GitHub Actions (para ejecutar pruebas automatizadas).
+   * **CI/CD:** Jenkins, GitLab CI, GitHub Actions (configurados para construir y desplegar en **ACA** para Core AI).
 
 ## 8. Roles y Responsabilidades
 
@@ -121,7 +122,7 @@ Dado que la validación de la IA es un objetivo clave, se requiere un enfoque es
 
 ## 9. Criterios de Entrada y Salida
 
-* **Criterios de Entrada (para iniciar ciclo de pruebas):** Build desplegado en entorno de pruebas, pruebas unitarias superadas, funcionalidades clave listas según plan de desarrollo.
+* **Criterios de Entrada:** Build desplegado en entorno de pruebas (ATS y Core AI en ACA).
 * **Criterios de Salida (para release/piloto):** Todos los casos de prueba de alta prioridad ejecutados y superados, sin defectos críticos o bloqueantes abiertos, cobertura de pruebas definida alcanzada, UAT completada con éxito (o issues aceptados).
 
 ## 10. Gestión de Defectos

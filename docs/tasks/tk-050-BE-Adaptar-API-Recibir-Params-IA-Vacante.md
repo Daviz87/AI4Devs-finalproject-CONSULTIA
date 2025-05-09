@@ -13,7 +13,7 @@ US-013: Configurar Parámetros de Evaluación IA para la Vacante
 1.  El endpoint `PATCH /api/v1/jobs/{jobId}` (TK-022) ahora acepta opcionalmente los campos `ai_cutoff_score` (Number), `ai_accept_stage_id` (String/UUID), `ai_reject_stage_id` (String/UUID) en el cuerpo JSON.
 2.  Se añade validación para `ai_cutoff_score` (debe ser numérico entre 0 y 100 si se proporciona). Devuelve 400 si falla.
 3.  Se añade validación para `ai_accept_stage_id` y `ai_reject_stage_id` (deben ser IDs de etapas válidas y marcadas como 'seleccionable_ia' - requiere consultar EtapaPipeline). Devuelve 400 si falla.
-4.  Los parámetros IA validados se pasan a la lógica de negocio de actualización (TK-023 adaptada o nueva lógica en TK-051).
+4.  Los parámetros IA validados se pasan a la lógica de negocio de actualización (TK-023 o nueva lógica en TK-051).
 
 ## Solución Técnica Propuesta (Opcional)
 Actualizar la validación de entrada del controlador/ruta para incluir los nuevos campos y sus reglas. La validación de IDs de etapa puede hacerse consultando la tabla EtapaPipeline.
